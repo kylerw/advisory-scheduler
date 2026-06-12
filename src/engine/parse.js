@@ -12,7 +12,11 @@ function isDataRow(cells) {
   return PRIORITIES.includes(cellStr(cells[1]).toUpperCase())
 }
 
-// rows: array of cell arrays (cols A..J = indexes 0..9). Returns { students, malformed }.
+/**
+ * @param {Array<Array<unknown>>} rows - raw sheet rows, cols A..J = indexes 0..9
+ * @returns {{ students: Array<{id: string, priority: 'A'|'B'|'C', options: number[], row: number}>,
+ *             malformed: Array<{row: number, id: string, problems: string[]}> }}
+ */
 export function parseRows(rows) {
   const students = []
   const malformed = []
@@ -33,11 +37,11 @@ export function parseRows(rows) {
     for (let c = 2; c <= 9; c++) {
       const raw = cellStr(cells[c])
       if (raw === '') continue
-      const code = Number(raw)
-      if (!Number.isFinite(code)) {
+      if (!/^\d+$/.test(raw) || raw === '0') {
         problems.push(`non-numeric teacher code "${raw}" in period ${c - 1}`)
         continue
       }
+      const code = Number(raw)
       if (!options.includes(code)) options.push(code)
     }
 

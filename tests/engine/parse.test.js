@@ -68,4 +68,28 @@ describe('parseRows', () => {
       { row: 5, id: '1004', problems: ['non-numeric teacher code "abc" in period 1'] },
     ])
   })
+
+  it('rejects hex, exponent, decimal, and zero teacher codes as non-numeric', () => {
+    const { students, malformed } = parseRows([
+      ['1', 'A', '0x1A', '1e3', '11.5', '0', '11', '', '', ''],
+    ])
+    expect(students).toEqual([])
+    expect(malformed[0].problems).toEqual([
+      'non-numeric teacher code "0x1A" in period 1',
+      'non-numeric teacher code "1e3" in period 2',
+      'non-numeric teacher code "11.5" in period 3',
+      'non-numeric teacher code "0" in period 4',
+    ])
+  })
+
+  it('handles exotic SheetJS cell types (Date, boolean) without throwing', () => {
+    const { students, malformed } = parseRows([
+      ['Header', 'Priority', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'],
+      ['1', true, new Date(2026, 0, 1), '11', '', '', '', '', '', ''],
+    ])
+    expect(students).toEqual([])
+    expect(malformed).toHaveLength(1)
+    expect(malformed[0].problems[0]).toBe('priority "true" is not A, B, or C')
+    expect(malformed[0].problems[1]).toMatch(/^non-numeric teacher code .* in period 1$/)
+  })
 })
