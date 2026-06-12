@@ -21,11 +21,21 @@ function download(filename, text) {
 
 async function onFile(file) {
   if (!file) return
-  const rows = await loadFile(file)
-  report = validate(parseRows(rows))
-  $('validation-report').innerHTML = renderValidation(report)
-  $('validation-section').hidden = false
-  $('results-section').hidden = true
+  try {
+    const rows = await loadFile(file)
+    report = validate(parseRows(rows))
+    lastRun = null
+    $('validation-report').innerHTML = renderValidation(report)
+    $('validation-section').hidden = false
+    $('results-section').hidden = true
+  } catch (err) {
+    report = null
+    lastRun = null
+    $('validation-report').innerHTML =
+      '<p class="bad">Could not read that file. Make sure it is a valid .xlsx or .csv export and try again.</p>'
+    $('validation-section').hidden = false
+    $('results-section').hidden = true
+  }
 }
 
 function allFlags(report, engineFlagged) {
@@ -41,6 +51,12 @@ function allFlags(report, engineFlagged) {
       })
     }
   }
+  for (const m of report.malformed) {
+    flags.push({
+      student: { id: m.id || '(missing)', row: m.row },
+      reason: `malformed row — ${m.problems.join('; ')}`,
+    })
+  }
   return flags.concat(engineFlagged).sort((a, b) => a.student.row - b.student.row)
 }
 
@@ -49,8 +65,10 @@ function run() {
     cap: Number($('cap-input').value),
     target: Number($('target-input').value),
   }
+  if (!report) return alert('Load a spreadsheet first')
   if (!Number.isFinite(settings.cap) || settings.cap < 1) return alert('Cap must be a positive number')
   if (!Number.isFinite(settings.target) || settings.target < 1) return alert('Target must be a positive number')
+  if (settings.target > settings.cap) return alert('Target cannot exceed the cap')
 
   const result = assign(report.eligible, settings)
   const flags = allFlags(report, result.flagged)
@@ -76,6 +94,6 @@ zone.addEventListener('drop', e => {
 })
 
 $('run-button').addEventListener('click', run)
-$('dl-master').addEventListener('click', () => download('advisory-assignments.csv', masterCsv(lastRun.result.placed)))
-$('dl-rosters').addEventListener('click', () => download('advisory-rosters.csv', rosterCsv(lastRun.result.placed)))
-$('dl-flagged').addEventListener('click', () => download('advisory-flagged.csv', flaggedCsv(lastRun.flags)))
+$('dl-master').addEventListener('click', () => lastRun && download('advisory-assignments.csv', masterCsv(lastRun.result.placed)))
+$('dl-rosters').addEventListener('click', () => lastRun && download('advisory-rosters.csv', rosterCsv(lastRun.result.placed)))
+$('dl-flagged').addEventListener('click', () => lastRun && download('advisory-flagged.csv', flaggedCsv(lastRun.flags)))
