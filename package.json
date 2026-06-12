@@ -1,0 +1,21 @@
+{
+  "name": "advisory-scheduler",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:single": "vite build --config vite.single.config.js",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0",
+    "vite-plugin-singlefile": "^2.0.0"
+  }
+}
