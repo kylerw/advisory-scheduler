@@ -9,7 +9,10 @@ function esc(text) {
 
 export function renderValidation(report) {
   const items = []
-  items.push(`<p><strong>${report.rowCount}</strong> rows, <strong>${report.sectionCount}</strong> advisory sections found.</p>`)
+  items.push(`<p><strong>${report.rowCount}</strong> student rows, <strong>${report.sectionCount}</strong> advisory sections found.</p>`)
+  if (report.headerRowsSkipped > 0) {
+    items.push(`<p>Skipped ${report.headerRowsSkipped} header row(s) at the top of the file.</p>`)
+  }
   const problems = []
   if (report.malformed.length > 0) {
     const rows = report.malformed

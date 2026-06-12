@@ -51,6 +51,15 @@ describe('validate', () => {
     expect(report.rowCount).toBe(1)
   })
 
+  it('passes headerRowsSkipped through to the report (defaulting to 0)', () => {
+    const withHeader = validate(parseRows([
+      ['Student ID', 'Priority', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'],
+      row('1', 'A', '11'),
+    ]))
+    expect(withHeader.headerRowsSkipped).toBe(1)
+    expect(validate({ students: [], malformed: [] }).headerRowsSkipped).toBe(0)
+  })
+
   it('tiny-section boundary: exactly 5 is tiny, exactly 6 is not', () => {
     const rows = []
     for (let i = 0; i < 5; i++) rows.push(row(`five${i}`, 'A', '55'))

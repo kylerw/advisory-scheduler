@@ -11,6 +11,26 @@
     <h1>Advisory Scheduler</h1>
     <p class="tagline">Assigns every student to an advisory led by a teacher already on their schedule. Everything runs in your browser — the file never leaves this computer.</p>
 
+    <details id="format-help">
+      <summary>How to prepare the spreadsheet (start here each year)</summary>
+      <p>Export one file from the SIS with <strong>one row per student to be placed</strong>. Header rows at the top are fine — the tool detects and skips them automatically.</p>
+      <table>
+        <tr><th>Column</th><th>Contents</th></tr>
+        <tr><td>A</td><td>Student ID number</td></tr>
+        <tr><td>B</td><td>Scheduling priority: <strong>A</strong>, <strong>B</strong>, or <strong>C</strong>. This only sets processing order (A students tend to have the fewest class options) — it is not a student attribute.</td></tr>
+        <tr><td>C–J</td><td>The student's teacher codes, one column per period (8 periods), numeric codes only. Leave a period <em>blank</em> if the student has no class then — that student simply has fewer advisory options.</td></tr>
+      </table>
+      <ul>
+        <li>Each distinct teacher code in the file = one advisory section. Teachers who need to be combined must already be merged into a single shared code <em>before</em> export.</li>
+        <li>Students who are pre-placed by hand must be <em>left out of the file</em>, and their advisories don't appear in it. Every section in the file starts empty.</li>
+        <li>Include only IDs and codes — no names, grades, or other student information.</li>
+        <li>Save as <strong>.xlsx</strong> or <strong>.csv</strong>.</li>
+      </ul>
+      <p><strong>Settings:</strong> <em>cap</em> is the hard maximum per section (never exceeded); <em>target</em> is the size the balancer aims for. Defaults: cap 29, target 26.</p>
+      <p><strong>What you get:</strong> a master list (student → section), per-section rosters (printable), and a flagged list naming every row that couldn't be placed and exactly why — including which sections are the bottleneck, so fixes happen in the data, not by guessing.</p>
+      <p><strong>The guarantee:</strong> if a full assignment is mathematically possible within the cap, the tool finds it. Anyone flagged genuinely cannot be placed without changing the data or the cap.</p>
+    </details>
+
     <section id="load-section">
       <label id="drop-zone" for="file-input">
         <strong>Drop the spreadsheet here</strong> or click to choose a file

@@ -83,13 +83,60 @@ describe('parseRows', () => {
   })
 
   it('handles exotic SheetJS cell types (Date, boolean) without throwing', () => {
+    // No row in this file looks like data, so nothing is skipped as a header —
+    // every non-blank row surfaces as malformed instead of being silently dropped.
     const { students, malformed } = parseRows([
       ['Header', 'Priority', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'],
       ['1', true, new Date(2026, 0, 1), '11', '', '', '', '', '', ''],
     ])
     expect(students).toEqual([])
-    expect(malformed).toHaveLength(1)
-    expect(malformed[0].problems[0]).toBe('priority "true" is not A, B, or C')
-    expect(malformed[0].problems[1]).toMatch(/^non-numeric teacher code .* in period 1$/)
+    expect(malformed).toHaveLength(2)
+    expect(malformed[1].problems[0]).toBe('priority "true" is not A, B, or C')
+    expect(malformed[1].problems[1]).toMatch(/^non-numeric teacher code .* in period 1$/)
+  })
+
+  it('skips multiple leading header rows (title + column labels) and reports the count', () => {
+    const { students, malformed, headerRowsSkipped } = parseRows([
+      ['Advisory Assignments 2026-27', '', '', '', '', '', '', '', '', ''],
+      ['Student ID', 'Priority', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'],
+      ['1001', 'A', '11', '', '', '', '', '', '', ''],
+    ])
+    expect(malformed).toEqual([])
+    expect(students).toEqual([{ id: '1001', priority: 'A', options: [11], row: 3 }])
+    expect(headerRowsSkipped).toBe(2)
+  })
+
+  it('skips a lettered-columns header row even when column B is literally "B"', () => {
+    const { students, malformed, headerRowsSkipped } = parseRows([
+      ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'],
+      ['1001', 'A', '11', '', '', '', '', '', '', ''],
+    ])
+    expect(malformed).toEqual([])
+    expect(students).toEqual([{ id: '1001', priority: 'A', options: [11], row: 2 }])
+    expect(headerRowsSkipped).toBe(1)
+  })
+
+  it('does not mistake a zero-option data row for a header', () => {
+    const { students, headerRowsSkipped } = parseRows([
+      ['1001', 'A', '', '', '', '', '', '', '', ''],
+      ['1002', 'B', '11', '', '', '', '', '', '', ''],
+    ])
+    expect(students).toHaveLength(2)
+    expect(headerRowsSkipped).toBe(0)
+  })
+
+  it('reports headerRowsSkipped 0 for a headerless file', () => {
+    const { headerRowsSkipped } = parseRows([['1001', 'A', '11', '', '', '', '', '', '', '']])
+    expect(headerRowsSkipped).toBe(0)
+  })
+
+  it('does not count blank rows between headers and data as skipped headers', () => {
+    const { students, headerRowsSkipped } = parseRows([
+      ['Student ID', 'Priority', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8'],
+      ['', '', '', '', '', '', '', '', '', ''],
+      ['1001', 'A', '11', '', '', '', '', '', '', ''],
+    ])
+    expect(students).toEqual([{ id: '1001', priority: 'A', options: [11], row: 3 }])
+    expect(headerRowsSkipped).toBe(1)
   })
 })

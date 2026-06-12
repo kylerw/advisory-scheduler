@@ -16,7 +16,7 @@ All processing happens client-side in the browser. The uploaded file is parsed, 
 
 ## 3. Input
 
-One spreadsheet, `.xlsx` (primary, what the registrar produces) or `.csv` (also accepted). One row per student:
+One spreadsheet, `.xlsx` (primary, what the registrar produces) or `.csv` (also accepted). Leading header rows (title and/or column labels, up to 10 rows) are auto-detected and skipped; the file check reports how many were skipped. A row counts as data when column B holds a priority code and its teacher-code cells aren't uniformly non-numeric text (amended 2026-06-12 after real-file testing — the original single-header heuristic failed on real exports). One row per student:
 
 | Column | Content |
 |---|---|
