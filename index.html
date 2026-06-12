@@ -4,8 +4,46 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Advisory Scheduler</title>
+  <link rel="stylesheet" href="./src/styles.css">
 </head>
 <body>
-  <h1>Advisory Scheduler</h1>
+  <main>
+    <h1>Advisory Scheduler</h1>
+    <p class="tagline">Assigns every student to an advisory led by a teacher already on their schedule. Everything runs in your browser — the file never leaves this computer.</p>
+
+    <section id="load-section">
+      <label id="drop-zone" for="file-input">
+        <strong>Drop the spreadsheet here</strong> or click to choose a file
+        <span class="hint">.xlsx or .csv — one row per student: ID, priority (A/B/C), 8 teacher-code columns</span>
+        <input id="file-input" type="file" accept=".xlsx,.csv" hidden>
+      </label>
+    </section>
+
+    <section id="validation-section" hidden>
+      <h2>File check</h2>
+      <div id="validation-report"></div>
+      <div class="settings">
+        <label>Class size cap <input id="cap-input" type="number" value="29" min="1"></label>
+        <label>Balance target <input id="target-input" type="number" value="26" min="1"></label>
+        <button id="run-button">Run assignment</button>
+      </div>
+    </section>
+
+    <section id="results-section" hidden>
+      <h2>Results</h2>
+      <div id="headline"></div>
+      <div class="downloads">
+        <button id="dl-master">Download master list (CSV)</button>
+        <button id="dl-rosters">Download rosters (CSV)</button>
+        <button id="dl-flagged">Download flagged list (CSV)</button>
+      </div>
+      <div id="flagged-report"></div>
+      <h3>Section loads</h3>
+      <div id="load-summary"></div>
+      <h3>Rosters</h3>
+      <div id="rosters"></div>
+    </section>
+  </main>
+  <script type="module" src="./src/ui/main.js"></script>
 </body>
 </html>
