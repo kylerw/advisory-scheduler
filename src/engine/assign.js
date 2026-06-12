@@ -65,6 +65,44 @@ function bottleneckReason(visited, roster, cap) {
   return `all eligible sections full — bottleneck: sections ${sections.join(', ')} (${seats} seats, ${locked} students locked to them)`
 }
 
+// Post-pass: shift students out of over-target sections into eligible
+// under-target sections while each move strictly improves balance.
+// Each applied move strictly decreases the sum of squared loads, so this
+// terminates.
+function rebalance(roster, placed, target) {
+  let moved = true
+  while (moved) {
+    moved = false
+    const codes = [...roster.keys()].sort(
+      (a, b) => roster.get(b).length - roster.get(a).length || a - b,
+    )
+    for (const code of codes) {
+      const srcLoad = roster.get(code).length
+      if (srcLoad <= target) break
+      for (const s of roster.get(code)) {
+        let dest = null
+        let destLoad = Infinity
+        for (const alt of s.options) {
+          if (alt === code) continue
+          const load = roster.get(alt).length
+          if (load < target && load + 1 < srcLoad && load < destLoad) {
+            dest = alt
+            destLoad = load
+          }
+        }
+        if (dest !== null) {
+          roster.set(code, roster.get(code).filter(x => x !== s))
+          roster.get(dest).push(s)
+          placed.set(s, dest)
+          moved = true
+          break
+        }
+      }
+      if (moved) break
+    }
+  }
+}
+
 export function assign(students, { cap, target }) {
   const order = orderStudents(students)
   const roster = new Map()
@@ -88,5 +126,6 @@ export function assign(students, { cap, target }) {
       }
     }
   }
+  rebalance(roster, placed, target)
   return { placed, roster, flagged }
 }

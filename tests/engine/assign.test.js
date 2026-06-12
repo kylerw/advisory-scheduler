@@ -140,3 +140,101 @@ describe('assign — repair and bottlenecks', () => {
     }
   })
 })
+
+describe('assign — rebalance', () => {
+  it('keeps a flexible student out of an over-target section', () => {
+    // cap 4, target 2. a,b,c are locked to 10 (load 3 > target).
+    // flex must end in 20 (under target), never 10.
+    const students = [
+      S('a', 'A', [10], 1),
+      S('b', 'A', [10], 2),
+      S('c', 'A', [10], 3),
+      S('flex', 'A', [10, 20], 4),
+    ]
+    const { placed, roster } = assign(students, { cap: 4, target: 2 })
+    expect(placed.get(students[3])).toBe(20)
+    expect(roster.get(10)).toHaveLength(3)
+  })
+
+  it('rebalance never exceeds cap and keeps everyone in an own-row section', () => {
+    const students = [
+      S('a', 'A', [10], 1),
+      S('b', 'A', [10], 2),
+      S('c', 'A', [10, 20], 3),
+      S('d', 'A', [10, 20], 4),
+      S('e', 'A', [20], 5),
+    ]
+    const { placed, roster } = assign(students, { cap: 3, target: 2 })
+    for (const [s, code] of placed) expect(s.options).toContain(code)
+    for (const list of roster.values()) expect(list.length).toBeLessThanOrEqual(3)
+    expect(placed.size).toBe(5)
+  })
+})
+
+describe('assign — multi-hop repair chains', () => {
+  it('repairs through a 2-hop chain', () => {
+    // cap 1. Order = file order (all 2-option, same priority).
+    // a->10, b->20, c->30, then d needs 10 or 20; both full.
+    // Chain: a can only go 10<->20 (visited), b: 20->30 (full) -> deeper: c: 30->40 (free).
+    // Expected: 2-hop chain b 20->30 won't fit (30 occupied by c)... BFS explores:
+    // seeds {10,20}; occupants a(10): alts 20 visited; b(20): alt 30 -> push {30,[b:20->30]};
+    // 30 full; occupant c alts: 40 -> push {40, [b:20->30, c:30->40]}; 40 free ->
+    // apply reversed: c 30->40, b 20->30, d takes chain[0].from = 20.
+    const students = [
+      S('a', 'A', [10, 20], 1),
+      S('b', 'A', [20, 30], 2),
+      S('c', 'A', [30, 40], 3),
+      S('d', 'A', [10, 20], 4),
+    ]
+    const { placed, flagged, roster } = assign(students, { cap: 1, target: 1 })
+    expect(flagged).toEqual([])
+    expect(placed.get(students[0])).toBe(10)
+    expect(placed.get(students[1])).toBe(30)
+    expect(placed.get(students[2])).toBe(40)
+    expect(placed.get(students[3])).toBe(20)
+    for (const list of roster.values()) expect(list.length).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('assign — global invariants on generated data', () => {
+  // Seeded LCG so the fixture is identical on every run (determinism matters
+  // here more than randomness quality).
+  function lcg(seed) {
+    let s = seed
+    return () => {
+      s = (s * 48271) % 2147483647
+      return s / 2147483647
+    }
+  }
+
+  function generate(seed, nStudents, nSections) {
+    const rand = lcg(seed)
+    const students = []
+    for (let i = 0; i < nStudents; i++) {
+      const count = 1 + Math.floor(rand() * 8)
+      const options = []
+      while (options.length < count) {
+        const code = 100 + Math.floor(rand() * nSections)
+        if (!options.includes(code)) options.push(code)
+      }
+      const priority = 'ABC'[Math.floor(rand() * 3)]
+      students.push(S(`s${i}`, priority, options, i + 1))
+    }
+    return students
+  }
+
+  it('holds all invariants at production scale (1444 students, 57 sections)', () => {
+    const students = generate(42, 1444, 57)
+    const settings = { cap: 29, target: 26 }
+    const { placed, roster, flagged } = assign(students, settings)
+
+    expect(placed.size + flagged.length).toBe(1444)
+    for (const [s, code] of placed) expect(s.options).toContain(code)
+    for (const list of roster.values()) {
+      expect(list.length).toBeLessThanOrEqual(settings.cap)
+    }
+    const second = assign(generate(42, 1444, 57), settings)
+    expect([...second.placed.values()]).toEqual([...placed.values()])
+    expect(second.flagged.length).toBe(flagged.length)
+  })
+})
