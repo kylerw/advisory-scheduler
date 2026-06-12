@@ -24,6 +24,47 @@ function pickSection(options, roster, limit) {
   return pick
 }
 
+// BFS from the stuck student's sections toward any section with a free seat.
+// chain[i] = { mover, from, to }: occupant `mover` leaves `from` for `to`.
+// Returns { ok: true } after applying, or { ok: false, visited } naming the
+// saturated cluster.
+function repair(student, roster, placed, cap) {
+  const visited = new Set(student.options)
+  const queue = student.options.map(code => ({ code, chain: [] }))
+
+  while (queue.length > 0) {
+    const { code, chain } = queue.shift()
+    if (roster.get(code).length < cap) {
+      for (let i = chain.length - 1; i >= 0; i--) {
+        const { mover, from, to } = chain[i]
+        roster.set(from, roster.get(from).filter(s => s !== mover))
+        roster.get(to).push(mover)
+        placed.set(mover, to)
+      }
+      const dest = chain.length > 0 ? chain[0].from : code
+      roster.get(dest).push(student)
+      placed.set(student, dest)
+      return { ok: true }
+    }
+    for (const occupant of roster.get(code)) {
+      for (const alt of occupant.options) {
+        if (!visited.has(alt)) {
+          visited.add(alt)
+          queue.push({ code: alt, chain: [...chain, { mover: occupant, from: code, to: alt }] })
+        }
+      }
+    }
+  }
+  return { ok: false, visited }
+}
+
+function bottleneckReason(visited, roster, cap) {
+  const sections = [...visited].sort((a, b) => a - b)
+  const seats = sections.length * cap
+  const locked = sections.reduce((n, code) => n + roster.get(code).length, 0) + 1
+  return `all eligible sections full — bottleneck: sections ${sections.join(', ')} (${seats} seats, ${locked} students locked to them)`
+}
+
 export function assign(students, { cap, target }) {
   const order = orderStudents(students)
   const roster = new Map()
@@ -41,7 +82,10 @@ export function assign(students, { cap, target }) {
       roster.get(choice).push(s)
       placed.set(s, choice)
     } else {
-      flagged.push({ student: s, reason: 'PLACEHOLDER_NEEDS_REPAIR' })
+      const result = repair(s, roster, placed, cap)
+      if (!result.ok) {
+        flagged.push({ student: s, reason: bottleneckReason(result.visited, roster, cap) })
+      }
     }
   }
   return { placed, roster, flagged }

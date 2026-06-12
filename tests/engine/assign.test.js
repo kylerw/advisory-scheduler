@@ -94,3 +94,49 @@ describe('assign — ordering and greedy', () => {
     expect(placed.get(students[0])).toBe(20)
   })
 })
+
+describe('assign — repair and bottlenecks', () => {
+  it('repairs via a chain of moves when greedy strands a placeable student', () => {
+    // cap 1. Order is file order (all 2-option, same priority).
+    // a -> 10, b -> 20, then c finds 10 and 20 full. Chain: b moves 20 -> 30, c takes 20.
+    const students = [
+      S('a', 'A', [10, 20], 1),
+      S('b', 'A', [20, 30], 2),
+      S('c', 'A', [10, 20], 3),
+    ]
+    const { placed, flagged } = assign(students, { cap: 1, target: 1 })
+    expect(flagged).toEqual([])
+    expect(placed.get(students[0])).toBe(10)
+    expect(placed.get(students[1])).toBe(30)
+    expect(placed.get(students[2])).toBe(20)
+  })
+
+  it('flags a genuinely infeasible student and names the bottleneck cluster', () => {
+    // cap 1, three students locked inside sections {10, 20} (2 seats).
+    const students = [
+      S('a', 'A', [10, 20], 1),
+      S('b', 'A', [20], 2),
+      S('c', 'B', [10, 20], 3),
+    ]
+    const { placed, flagged } = assign(students, { cap: 1, target: 1 })
+    expect(placed.size).toBe(2)
+    expect(flagged).toHaveLength(1)
+    expect(flagged[0].student.id).toBe('c')
+    expect(flagged[0].reason).toBe(
+      'all eligible sections full — bottleneck: sections 10, 20 (2 seats, 3 students locked to them)',
+    )
+  })
+
+  it('never exceeds cap, even through repair chains', () => {
+    const students = [
+      S('a', 'A', [10, 20], 1),
+      S('b', 'A', [20, 30], 2),
+      S('c', 'A', [10, 20], 3),
+      S('d', 'A', [30, 10], 4),
+    ]
+    const { roster } = assign(students, { cap: 1, target: 1 })
+    for (const list of roster.values()) {
+      expect(list.length).toBeLessThanOrEqual(1)
+    }
+  })
+})
