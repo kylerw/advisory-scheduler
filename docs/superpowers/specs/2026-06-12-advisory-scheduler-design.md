@@ -90,7 +90,7 @@ Two units with a hard boundary:
 - **Engine** (`src/engine/`) — pure JavaScript, zero DOM/UI dependencies. Functions: `parse(rows)` → student records; `validate(students)` → validation report; `assign(students, settings)` → assignment + flags + per-section loads; `toCsv(...)` exporters. Fully unit-testable; the UI is just a consumer.
 - **UI** (`src/ui/` + `index.html`) — file drop zone, settings inputs, validation report, run button, results tables, download buttons. Reads engine output; contains no scheduling logic.
 
-**Dependencies:** SheetJS (xlsx parsing), PapaParse (csv parsing). No framework — plain JS/HTML/CSS with Vite for dev/build/test tooling. Vitest for tests.
+**Dependencies:** SheetJS (parses both .xlsx and .csv — PapaParse dropped as redundant, amended at planning). No framework — plain JS/HTML/CSS with Vite for dev/build/test tooling. Vitest for tests.
 
 ## 9. Hosting & distribution
 
