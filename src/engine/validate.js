@@ -1,6 +1,8 @@
+// Sections with <= this many ELIGIBLE students are flagged as suspiciously tiny.
 const TINY_SECTION_THRESHOLD = 5
 
 // parsed: { students, malformed } from parseRows. Returns the pre-run report.
+// rowCount counts parsed data rows (header and blank rows are not included).
 export function validate({ students, malformed }) {
   const byId = new Map()
   for (const s of students) {

@@ -50,4 +50,19 @@ describe('validate', () => {
     expect(report.malformed).toHaveLength(1)
     expect(report.rowCount).toBe(1)
   })
+
+  it('tiny-section boundary: exactly 5 is tiny, exactly 6 is not', () => {
+    const rows = []
+    for (let i = 0; i < 5; i++) rows.push(row(`five${i}`, 'A', '55'))
+    for (let i = 0; i < 6; i++) rows.push(row(`six${i}`, 'A', '66'))
+    const report = validate(parseRows(rows))
+    expect(report.tinySections).toEqual([{ code: 55, eligibleCount: 5 }])
+  })
+
+  it('a duplicated zero-option student lands in duplicates, not zeroOption', () => {
+    const parsed = parseRows([row('1', 'A'), row('1', 'B')])
+    const report = validate(parsed)
+    expect(report.duplicates).toEqual([{ id: '1', rows: [1, 2] }])
+    expect(report.zeroOption).toEqual([])
+  })
 })
