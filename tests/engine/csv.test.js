@@ -27,4 +27,12 @@ describe('csv exporters', () => {
       'student_id,row_number,reason\n1003,3,"no teacher codes in row"\n',
     )
   })
+
+  it('escapes ids containing commas or quotes, and doubles quotes in reasons', () => {
+    const weird = S('10,01"x', 'A', [10], 1)
+    const m = masterCsv(new Map([[weird, 10]]))
+    expect(m).toBe('student_id,assigned_section\n"10,01""x",10\n')
+    const f = flaggedCsv([{ student: weird, reason: 'she said "hello"' }])
+    expect(f).toBe('student_id,row_number,reason\n"10,01""x",1,"she said ""hello"""\n')
+  })
 })
