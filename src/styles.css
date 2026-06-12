@@ -33,9 +33,9 @@ th { background: #edf2f7; }
   body { background: #fff; }
 }
 
-#format-help { margin-top: 1.25rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem 1rem; }
-#format-help summary { cursor: pointer; font-weight: 600; color: #2b6cb0; }
+#format-help, #logic-help { margin-top: 1.25rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem 1rem; }
+#format-help summary, #logic-help summary { cursor: pointer; font-weight: 600; color: #2b6cb0; }
 #format-help table { margin: 0.75rem 0; }
-#format-help ul { padding-left: 1.25rem; }
-#format-help li { margin-bottom: 0.35rem; }
-@media print { #format-help { display: none; } }
+#format-help ul, #logic-help ol { padding-left: 1.25rem; }
+#format-help li, #logic-help li { margin-bottom: 0.35rem; }
+@media print { #format-help, #logic-help { display: none; } }

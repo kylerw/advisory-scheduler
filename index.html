@@ -28,7 +28,19 @@
       </ul>
       <p><strong>Settings:</strong> <em>cap</em> is the hard maximum per section (never exceeded); <em>target</em> is the size the balancer aims for. Defaults: cap 29, target 26.</p>
       <p><strong>What you get:</strong> a master list (student → section), per-section rosters (printable), and a flagged list naming every row that couldn't be placed and exactly why — including which sections are the bottleneck, so fixes happen in the data, not by guessing.</p>
-      <p><strong>The guarantee:</strong> if a full assignment is mathematically possible within the cap, the tool finds it. Anyone flagged genuinely cannot be placed without changing the data or the cap.</p>
+    </details>
+
+    <details id="logic-help">
+      <summary>How the scheduling logic works (rules refresher)</summary>
+      <ol>
+        <li><strong>Who is placed where:</strong> every student goes to an advisory led by one of the teacher codes in <em>their own row</em> — never anyone else's. Any of a student's own teachers is considered equally good.</li>
+        <li><strong>Processing order:</strong> students with the <em>fewest distinct teacher options</em> go first (1-option students before 2-option, and so on — this is the general form of "partial schedules first"). Ties break by priority A → B → C, then by row order in the file. Order is about who picks first, not who gets placed — see rule 5.</li>
+        <li><strong>Seat choice:</strong> each student is placed in their eligible section with the most open seats below the <em>target</em>; seats between target and the <em>cap</em> are used only when no under-target option exists. The cap is never exceeded, ever.</li>
+        <li><strong>Automatic repair:</strong> when a student's sections are all full, the tool looks for a chain of swaps — move someone with other options out of a full section, ripple as far as needed — and applies it. This is why placement order can't strand anyone unnecessarily.</li>
+        <li><strong>The guarantee:</strong> if a full assignment is mathematically possible within the cap, the tool finds it. Anyone flagged genuinely cannot be placed without changing the data or raising the cap — and the flag names the bottleneck sections and how many students are locked to them.</li>
+        <li><strong>Balancing:</strong> after everyone is placed, students are shifted from over-target sections into under-target ones (always within their own teachers) until sections sit as evenly as the constraints allow.</li>
+        <li><strong>Repeatability:</strong> the same file with the same settings produces the identical result every run — re-running is always safe.</li>
+      </ol>
     </details>
 
     <section id="load-section">
