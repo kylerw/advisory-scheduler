@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { assign } from '../../src/engine/assign.js'
+import { assign, rebalance } from '../../src/engine/assign.js'
 
 const S = (id, priority, options, row) => ({ id, priority, options, row })
 
@@ -168,6 +168,33 @@ describe('assign — rebalance', () => {
     for (const [s, code] of placed) expect(s.options).toContain(code)
     for (const list of roster.values()) expect(list.length).toBeLessThanOrEqual(3)
     expect(placed.size).toBe(5)
+  })
+
+  it('directly relocates a movable occupant out of an over-target section', () => {
+    // Hand-built post-greedy state that greedy itself avoids: 10 at load 4 > target 3,
+    // 20 empty, flex has 20 as an under-target alternative.
+    const a = S('a', 'A', [10], 1)
+    const b = S('b', 'A', [10], 2)
+    const c = S('c', 'A', [10], 3)
+    const flex = S('flex', 'A', [10, 20], 4)
+    const roster = new Map([[10, [a, b, c, flex]], [20, []]])
+    const placed = new Map([[a, 10], [b, 10], [c, 10], [flex, 10]])
+    rebalance(roster, placed, 3)
+    expect(roster.get(10).map(s => s.id)).toEqual(['a', 'b', 'c'])
+    expect(roster.get(20).map(s => s.id)).toEqual(['flex'])
+    expect(placed.get(flex)).toBe(20)
+  })
+
+  it('does not move when the swap would not strictly improve balance', () => {
+    // Anti-oscillation guard: src load 2, dest load 1 — destLoad + 1 < srcLoad fails.
+    const a = S('a', 'A', [10], 1)
+    const b = S('b', 'A', [10, 20], 2)
+    const c = S('c', 'A', [20], 3)
+    const roster = new Map([[10, [a, b]], [20, [c]]])
+    const placed = new Map([[a, 10], [b, 10], [c, 20]])
+    rebalance(roster, placed, 5)
+    expect(roster.get(10)).toHaveLength(2)
+    expect(roster.get(20)).toHaveLength(1)
   })
 })
 

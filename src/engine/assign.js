@@ -69,7 +69,7 @@ function bottleneckReason(visited, roster, cap) {
 // under-target sections while each move strictly improves balance.
 // Each applied move strictly decreases the sum of squared loads, so this
 // terminates.
-function rebalance(roster, placed, target) {
+export function rebalance(roster, placed, target) {
   let moved = true
   while (moved) {
     moved = false
