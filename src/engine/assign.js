@@ -27,7 +27,7 @@ function pickSection(options, roster, limit) {
 export function assign(students, { cap, target }) {
   const order = orderStudents(students)
   const roster = new Map()
-  for (const s of order) {
+  for (const s of students) {
     for (const code of s.options) {
       if (!roster.has(code)) roster.set(code, [])
     }

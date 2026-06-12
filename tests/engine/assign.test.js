@@ -30,8 +30,9 @@ describe('assign — ordering and greedy', () => {
   })
 
   it('breaks option-count ties by priority A before B before C', () => {
-    // Both students have the same options and option count; cap 1 — the A student
-    // is processed first and takes the first option (equal loads, earlier option wins).
+    // Both students have the same options and option count; cap 1. Priority A is
+    // processed first; with equal (zero) loads it takes its earlier option, 10.
+    // The C student then finds 10 full and lands in 20.
     const students = [
       S('cee', 'C', [10, 20], 1),
       S('ay', 'A', [10, 20], 2),
@@ -79,5 +80,17 @@ describe('assign — ordering and greedy', () => {
     const students = [S('1', 'A', [10, 20], 1)]
     const { roster } = assign(students, { cap: 29, target: 26 })
     expect([...roster.keys()].sort((x, y) => x - y)).toEqual([10, 20])
+  })
+
+  it('breaks option-count and priority ties by file row order', () => {
+    // Identical option counts and priorities; cap 1 — the earlier row is
+    // processed first and wins its first option.
+    const students = [
+      S('late', 'B', [10, 20], 5),
+      S('early', 'B', [10, 20], 2),
+    ]
+    const { placed } = assign(students, { cap: 1, target: 1 })
+    expect(placed.get(students[1])).toBe(10)
+    expect(placed.get(students[0])).toBe(20)
   })
 })
